@@ -78,6 +78,34 @@
     }
   }
 
+  // --- Try to find a price near the image ---
+  function findNearbyPrice(img) {
+    const priceRegex = /\$[\d,]+(?:\.\d{2})?/;
+
+    // Walk up to 5 parent levels looking for price text
+    let el = img.parentElement;
+    for (let i = 0; i < 5 && el; i++) {
+      const text = el.textContent || '';
+      const match = text.match(priceRegex);
+      if (match) {
+        return match[0].replace(/[$,]/g, '');
+      }
+      el = el.parentElement;
+    }
+
+    // Also check sibling elements
+    const parent = img.closest('article, [class*="product"], [class*="card"], [class*="item"], [class*="listing"]');
+    if (parent) {
+      const text = parent.textContent || '';
+      const match = text.match(priceRegex);
+      if (match) {
+        return match[0].replace(/[$,]/g, '');
+      }
+    }
+
+    return null;
+  }
+
   // --- Handle image click ---
   function onClick(e) {
     const img = e.target.closest('img');
@@ -87,11 +115,15 @@
     e.preventDefault();
     e.stopPropagation();
 
+    // Try to detect a price
+    const detectedPrice = findNearbyPrice(img);
+
     // Gather image data
     const imageData = {
       src: img.src,
       alt: img.alt || '',
-      pageUrl: window.location.href
+      pageUrl: window.location.href,
+      detectedPrice: detectedPrice
     };
 
     // Send the selected image data to the background script for storage

@@ -35,11 +35,6 @@ function ItemCard({ item, onClick, onStarToggle }) {
 
   const categoryClass = CATEGORY_STYLES[item.category] || 'bg-drift text-white';
 
-  // For room photos, display room name as title
-  const displayTitle = item.category === 'room_photo' && item.room
-    ? formatRoomName(item.room)
-    : (item.title || 'Untitled');
-
   return (
     <div
       onClick={() => onClick(item)}
@@ -50,8 +45,11 @@ function ItemCard({ item, onClick, onStarToggle }) {
         {item.image_url ? (
           <img
             src={item.image_url}
-            alt={displayTitle}
+            alt={item.title || formatRoomName(item.room)}
             className="w-full h-full object-cover"
+            style={item.focal_point_x != null && item.focal_point_y != null
+              ? { objectPosition: `${item.focal_point_x * 100}% ${item.focal_point_y * 100}%` }
+              : undefined}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-drift">
@@ -114,16 +112,20 @@ function ItemCard({ item, onClick, onStarToggle }) {
         >
           {CATEGORY_LABELS[item.category] || item.category}
         </span>
+
+        {/* Price badge — bottom right of image */}
+        {item.price != null && item.price > 0 && (
+          <span className="absolute bottom-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm bg-cloud bg-opacity-90 text-ink">
+            ${Number(item.price).toLocaleString()}
+          </span>
+        )}
       </div>
 
-      {/* Info */}
+      {/* Info — room name only */}
       <div className="py-2 px-3">
         <h3 className="font-semibold text-sm text-ink line-clamp-1">
-          {displayTitle}
-        </h3>
-        <p className="text-xs text-drift mt-0.5">
           {formatRoomName(item.room)}
-        </p>
+        </h3>
       </div>
     </div>
   );

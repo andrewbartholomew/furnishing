@@ -87,11 +87,11 @@ router.get('/:id', async (req, res) => {
 // POST / - Create item
 router.post('/', async (req, res) => {
   try {
-    const { title, image_url, source_url, room, category, color, notes, starred, queued } = req.body;
+    const { title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued } = req.body;
 
     const result = await runQuery(
-      `INSERT INTO items (title, image_url, source_url, room, category, color, notes, starred, queued)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO items (title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title || null,
         image_url || null,
@@ -100,6 +100,9 @@ router.post('/', async (req, res) => {
         category || null,
         color || null,
         notes || null,
+        price != null ? price : null,
+        focal_point_x != null ? focal_point_x : null,
+        focal_point_y != null ? focal_point_y : null,
         starred ? 1 : 0,
         queued ? 1 : 0,
       ]
@@ -123,7 +126,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Item not found' });
     }
 
-    const allowedFields = ['title', 'image_url', 'source_url', 'room', 'category', 'color', 'notes', 'starred', 'queued'];
+    const allowedFields = ['title', 'image_url', 'source_url', 'room', 'category', 'color', 'notes', 'price', 'focal_point_x', 'focal_point_y', 'starred', 'queued'];
     const updates = [];
     const values = [];
 

@@ -87,6 +87,51 @@
       background: #f0ece4;
     }
 
+    .focal-point-container {
+      position: relative;
+      cursor: crosshair;
+    }
+
+    .focal-point-container img {
+      display: block;
+    }
+
+    .focal-point-marker {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #4F7F72;
+      border-radius: 50%;
+      background: rgba(79, 127, 114, 0.3);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      display: none;
+    }
+
+    .focal-point-marker.active {
+      display: block;
+    }
+
+    .focal-point-marker::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      background: #4F7F72;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .focal-hint {
+      font-size: 11px;
+      color: #6b7f78;
+      text-align: center;
+      padding: 4px 12px;
+      font-style: italic;
+    }
+
     .image-source {
       padding: 8px 12px;
       font-size: 11px;
@@ -94,6 +139,23 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d4cfc5;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: white;
+      color: #2d3b36;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #4F7F72;
+      box-shadow: 0 0 0 2px rgba(79, 127, 114, 0.2);
     }
 
     /* Form elements */
@@ -188,7 +250,11 @@
   <!-- Mode 2: Form after image selected -->
   <div id="form-mode" class="hidden">
     <div class="image-preview">
-      <img id="preview-img" src="" alt="Selected image">
+      <div class="focal-point-container" id="focal-container">
+        <img id="preview-img" src="" alt="Selected image">
+        <div class="focal-point-marker" id="focal-marker"></div>
+      </div>
+      <div class="focal-hint">Click image to set focal point for cropping</div>
       <div class="image-source" id="image-source"></div>
     </div>
 
@@ -241,6 +307,11 @@
     <div class="form-group">
       <label for="title">Title (optional)</label>
       <input type="text" id="title" placeholder="e.g., Mid-century side table">
+    </div>
+
+    <div class="form-group">
+      <label for="price">Price (optional)</label>
+      <input type="number" id="price" placeholder="0.00" step="0.01" min="0">
     </div>
 
     <button id="save-btn" class="btn-primary">Save to Collection</button>

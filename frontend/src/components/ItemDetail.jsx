@@ -177,6 +177,7 @@ function ItemDetail({ item: initialItem, onClose, onUpdate }) {
         category: data.category || '',
         notes: data.notes || '',
         source_url: data.source_url || '',
+        price: data.price != null ? String(data.price) : '',
       });
     } catch (error) {
       console.error('Error loading item details:', error);
@@ -219,7 +220,11 @@ function ItemDetail({ item: initialItem, onClose, onUpdate }) {
       setSavingAll(true);
       setSaveError(null);
       setSaveSuccess(false);
-      const updated = await updateItem(item.id, editFields);
+      const fieldsToSave = {
+        ...editFields,
+        price: editFields.price !== '' ? Number(editFields.price) : null,
+      };
+      const updated = await updateItem(item.id, fieldsToSave);
       setItem({ ...item, ...updated });
       setEditFields({
         title: updated.title || '',
@@ -227,6 +232,7 @@ function ItemDetail({ item: initialItem, onClose, onUpdate }) {
         category: updated.category || '',
         notes: updated.notes || '',
         source_url: updated.source_url || '',
+        price: updated.price != null ? String(updated.price) : '',
       });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
@@ -275,7 +281,17 @@ function ItemDetail({ item: initialItem, onClose, onUpdate }) {
                   src={item.image_url}
                   alt={displayTitle}
                   className="w-full h-64 md:h-96 object-cover"
+                  style={item.focal_point_x != null && item.focal_point_y != null
+                    ? { objectPosition: `${item.focal_point_x * 100}% ${item.focal_point_y * 100}%` }
+                    : undefined}
                 />
+
+                {/* Price badge — bottom right of image */}
+                {item.price != null && item.price > 0 && (
+                  <span className="absolute bottom-4 right-4 text-sm font-semibold px-3 py-1 rounded-full shadow-sm bg-cloud bg-opacity-90 text-ink">
+                    ${Number(item.price).toLocaleString()}
+                  </span>
+                )}
 
                 {/* Top-right badges: source link + close */}
                 <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -366,6 +382,7 @@ function ItemDetail({ item: initialItem, onClose, onUpdate }) {
                   <EditRow label="Title" field="title" hint="Item name" {...rowProps} />
                   <RoomSelectRow {...rowProps} />
                   <CategorySelectRow {...rowProps} />
+                  <EditRow label="Price" field="price" type="number" hint="0.00" {...rowProps} />
                   <EditRow label="Notes" field="notes" type="textarea" hint="Additional notes..." {...rowProps} />
                   <EditRow label="Source URL" field="source_url" hint="https://..." {...rowProps} />
                 </div>

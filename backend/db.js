@@ -73,11 +73,27 @@ async function initializeDatabase() {
         category TEXT CHECK(category IN ('potential_purchase', 'inspiration', 'owned', 'room_photo')),
         color TEXT,
         notes TEXT,
+        price REAL,
+        focal_point_x REAL,
+        focal_point_y REAL,
         starred INTEGER DEFAULT 0,
         queued INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add columns if they don't exist (for existing databases)
+    const cols = await db.execute("PRAGMA table_info(items)");
+    const colNames = cols.rows.map(r => r.name);
+    if (!colNames.includes('price')) {
+      await db.execute('ALTER TABLE items ADD COLUMN price REAL');
+    }
+    if (!colNames.includes('focal_point_x')) {
+      await db.execute('ALTER TABLE items ADD COLUMN focal_point_x REAL');
+    }
+    if (!colNames.includes('focal_point_y')) {
+      await db.execute('ALTER TABLE items ADD COLUMN focal_point_y REAL');
+    }
 
     // Seed rooms (INSERT OR IGNORE so it only runs once)
     for (let i = 0; i < SEED_ROOMS.length; i++) {

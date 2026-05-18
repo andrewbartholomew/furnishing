@@ -11,11 +11,18 @@ const imageSource = document.getElementById('image-source');
 const roomSelect = document.getElementById('room');
 const categorySelect = document.getElementById('category');
 const titleInput = document.getElementById('title');
+const priceInput = document.getElementById('price');
+const focalContainer = document.getElementById('focal-container');
+const focalMarker = document.getElementById('focal-marker');
 const errorEl = document.getElementById('error');
 const successEl = document.getElementById('success');
 
 // Selected image data
 let selectedImageData = null;
+
+// Focal point (0-1 normalized coordinates, null if not set)
+let focalPointX = null;
+let focalPointY = null;
 
 // On popup load, check if there's a pending image from a previous selection
 document.addEventListener('DOMContentLoaded', async () => {
@@ -70,10 +77,31 @@ function displayImageForm(data) {
     titleInput.value = data.alt;
   }
 
+  // Pre-fill price if detected
+  if (data.detectedPrice) {
+    priceInput.value = data.detectedPrice;
+  }
+
   // Switch to form mode
   selectMode.classList.add('hidden');
   formMode.classList.remove('hidden');
 }
+
+// Focal point click handler
+focalContainer.addEventListener('click', (e) => {
+  const rect = previewImg.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+
+  // Clamp to 0-1
+  focalPointX = Math.max(0, Math.min(1, x));
+  focalPointY = Math.max(0, Math.min(1, y));
+
+  // Position marker
+  focalMarker.style.left = (focalPointX * 100) + '%';
+  focalMarker.style.top = (focalPointY * 100) + '%';
+  focalMarker.classList.add('active');
+});
 
 // Save button - upload image and create item
 saveBtn.addEventListener('click', async () => {
@@ -111,7 +139,10 @@ saveBtn.addEventListener('click', async () => {
       image_url: imageUrl,
       source_url: selectedImageData.pageUrl,
       room: room,
-      category: categorySelect.value
+      category: categorySelect.value,
+      price: priceInput.value ? parseFloat(priceInput.value) : null,
+      focal_point_x: focalPointX,
+      focal_point_y: focalPointY
     };
 
     const itemResponse = await fetch(`${API_URL}/items`, {
