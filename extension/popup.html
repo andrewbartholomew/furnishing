@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Furnishing Helper</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 400px;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      padding: 16px;
+      background: #f5f0e8;
+    }
+
+    .header {
+      margin-bottom: 16px;
+      border-bottom: 2px solid #4F7F72;
+      padding-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2d3b36;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #6b7f78;
+      margin-top: 4px;
+    }
+
+    /* Status messages */
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .success {
+      background: #ecf5f0;
+      border: 1px solid #a7d5c1;
+      color: #1a5e3a;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    /* Select mode - initial state */
+    .select-mode {
+      text-align: center;
+      padding: 24px 16px;
+    }
+
+    .select-mode p {
+      font-size: 14px;
+      color: #6b7f78;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* Image preview */
+    .image-preview {
+      background: white;
+      border: 1px solid #d4cfc5;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .image-preview img {
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      background: #f0ece4;
+    }
+
+    .image-source {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2d3b36;
+      margin-bottom: 4px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d4cfc5;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: white;
+      color: #2d3b36;
+    }
+
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #4F7F72;
+      box-shadow: 0 0 0 2px rgba(79, 127, 114, 0.2);
+    }
+
+    /* Buttons */
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary {
+      background: #4F7F72;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #3d6359;
+    }
+
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-select {
+      background: #4F7F72;
+      color: white;
+      padding: 14px 20px;
+      font-size: 15px;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-select:hover {
+      background: #3d6359;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Furnishing Helper</h1>
+    <p class="subtitle">Save inspiration images from any page</p>
+  </div>
+
+  <!-- Status messages -->
+  <div id="error" class="error hidden"></div>
+  <div id="success" class="success hidden"></div>
+
+  <!-- Mode 1: Select an image -->
+  <div id="select-mode" class="select-mode">
+    <p>Click the button below, then click any image on the page to save it.</p>
+    <button id="select-btn" class="btn-select">Select Image</button>
+  </div>
+
+  <!-- Mode 2: Form after image selected -->
+  <div id="form-mode" class="hidden">
+    <div class="image-preview">
+      <img id="preview-img" src="" alt="Selected image">
+      <div class="image-source" id="image-source"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="room">Room</label>
+      <select id="room">
+        <option value="">-- Select a room --</option>
+        <optgroup label="Ground">
+          <option value="ground">Ground (all)</option>
+          <option value="front-hall">Front Hall</option>
+          <option value="living-room">Living Room</option>
+          <option value="dining-room">Dining Room</option>
+          <option value="kitchen">Kitchen</option>
+          <option value="butlers-pantry">Butler's Pantry</option>
+          <option value="powder-room">Powder Room</option>
+        </optgroup>
+        <optgroup label="Second">
+          <option value="second">Second (all)</option>
+          <option value="landing">Landing</option>
+          <option value="family-room">Family Room</option>
+          <option value="main-bedroom">Main Bedroom</option>
+          <option value="main-bath">Main Bath</option>
+          <option value="graces-room">Grace's Room</option>
+          <option value="poppys-room">Poppy's Room</option>
+          <option value="bathroom-2">Bathroom 2</option>
+        </optgroup>
+        <optgroup label="Third">
+          <option value="third">Third (all)</option>
+          <option value="guest-bedroom">Guest Bedroom</option>
+          <option value="guest-bathroom">Guest Bathroom</option>
+          <option value="annas-office">Anna's Office</option>
+          <option value="andrews-office">Andrew's Office</option>
+          <option value="guest-living-room">Guest Living Room</option>
+          <option value="guest-kitchen">Guest Kitchen</option>
+        </optgroup>
+        <option value="basement">Basement</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Category</label>
+      <select id="category">
+        <option value="potential_purchase">Potential Purchase</option>
+        <option value="inspiration">Inspiration</option>
+        <option value="owned">Owned</option>
+        <option value="room_photo">Room</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="title">Title (optional)</label>
+      <input type="text" id="title" placeholder="e.g., Mid-century side table">
+    </div>
+
+    <button id="save-btn" class="btn-primary">Save to Collection</button>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
