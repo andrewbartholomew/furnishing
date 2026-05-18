@@ -16,14 +16,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    /\.vercel\.app$/,
-    /^chrome-extension:\/\//,
-  ],
-  credentials: true,
-}));
+app.use(cors());
 
 // JSON body parser with 50mb limit (for base64 images from extension/iOS)
 app.use(express.json({ limit: '50mb' }));
