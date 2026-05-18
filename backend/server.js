@@ -27,11 +27,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// Routes — serve at both /api/... and /... for flexibility
 app.use('/api/items', itemsRouter);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/queue', queueRouter);
+app.use('/items', itemsRouter);
+app.use('/rooms', roomsRouter);
+app.use('/upload', uploadRouter);
+app.use('/queue', queueRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
