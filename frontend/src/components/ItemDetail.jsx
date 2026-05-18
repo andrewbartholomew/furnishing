@@ -44,6 +44,11 @@ const FLOORS = [
     value: 'basement',
     children: [],
   },
+  {
+    label: 'Exterior',
+    value: 'exterior',
+    children: [],
+  },
 ];
 
 const CATEGORIES = [

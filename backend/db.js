@@ -39,6 +39,8 @@ const SEED_ROOMS = [
   'guest kitchen',
   // Basement
   'basement',
+  // Exterior
+  'exterior',
 ];
 
 // Generate slug from room name (lowercase, spaces to hyphens)

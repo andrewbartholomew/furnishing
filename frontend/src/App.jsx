@@ -8,37 +8,70 @@ import UploadZone from './components/UploadZone';
 import Queue from './components/Queue';
 import './App.css';
 
+// Parse hash into view + filter params: #browse?rooms=kitchen&sort=room -> { view: 'browse', params }
+function parseHash() {
+  const raw = window.location.hash.slice(1); // remove #
+  const [viewPart, queryPart] = raw.split('?');
+  const view = ['browse', 'upload', 'queue'].includes(viewPart) ? viewPart : 'browse';
+  const params = new URLSearchParams(queryPart || '');
+  return { view, params };
+}
+
+function initFromHash() {
+  const { view, params } = parseHash();
+  const rooms = params.get('rooms') ? params.get('rooms').split(',') : ['all'];
+  const categories = params.get('categories') ? params.get('categories').split(',') : ['all'];
+  const starred = params.get('starred') === '1';
+  const sort = params.get('sort') || 'room';
+  return { view, rooms, categories, starred, sort };
+}
+
 function App() {
   const [items, setItems] = useState([]);
   const [queuedItems, setQueuedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState(() => {
-    const hash = window.location.hash.slice(1);
-    return ['browse', 'upload', 'queue'].includes(hash) ? hash : 'browse';
-  });
+
+  const initial = useMemo(() => initFromHash(), []);
+  const [viewMode, setViewMode] = useState(initial.view);
   const [selectedItem, setSelectedItem] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Filters
-  const [selectedRooms, setSelectedRooms] = useState(['all']);
-  const [selectedCategories, setSelectedCategories] = useState(['all']);
+  const [selectedRooms, setSelectedRooms] = useState(initial.rooms);
+  const [selectedCategories, setSelectedCategories] = useState(initial.categories);
   const [colorFilter, setColorFilter] = useState('');
-  const [starredOnly, setStarredOnly] = useState(false);
-  const [sortBy, setSortBy] = useState('room');
+  const [starredOnly, setStarredOnly] = useState(initial.starred);
+  const [sortBy, setSortBy] = useState(initial.sort);
 
-  // Update URL hash when view mode changes
+  // Sync state to URL hash
   useEffect(() => {
-    window.location.hash = viewMode;
-  }, [viewMode]);
+    const params = new URLSearchParams();
+    if (!selectedRooms.includes('all') && selectedRooms.length > 0) {
+      params.set('rooms', selectedRooms.join(','));
+    }
+    if (!selectedCategories.includes('all') && selectedCategories.length > 0) {
+      params.set('categories', selectedCategories.join(','));
+    }
+    if (starredOnly) {
+      params.set('starred', '1');
+    }
+    if (sortBy !== 'room') {
+      params.set('sort', sortBy);
+    }
+    const query = params.toString();
+    window.location.hash = viewMode + (query ? '?' + query : '');
+  }, [viewMode, selectedRooms, selectedCategories, starredOnly, sortBy]);
 
   // Handle browser back/forward
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      if (['browse', 'upload', 'queue'].includes(hash)) {
-        setViewMode(hash);
-      }
+      const { view, params } = parseHash();
+      setViewMode(view);
+      setSelectedRooms(params.get('rooms') ? params.get('rooms').split(',') : ['all']);
+      setSelectedCategories(params.get('categories') ? params.get('categories').split(',') : ['all']);
+      setStarredOnly(params.get('starred') === '1');
+      setSortBy(params.get('sort') || 'room');
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
