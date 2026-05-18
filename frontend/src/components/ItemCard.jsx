@@ -41,18 +41,15 @@ function ItemCard({ item, onClick, onStarToggle }) {
       className="relative bg-cloud rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
     >
       {/* Image */}
-      <div className="h-48 bg-paper relative">
+      <div className="bg-paper relative">
         {item.image_url ? (
           <img
             src={item.image_url}
             alt={item.title || formatRoomName(item.room)}
-            className="w-full h-full object-cover"
-            style={item.focal_point_x != null && item.focal_point_y != null
-              ? { objectPosition: `${item.focal_point_x * 100}% ${item.focal_point_y * 100}%` }
-              : undefined}
+            className="w-full block rounded-t-lg"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-drift">
+          <div className="w-full h-48 flex items-center justify-center text-drift">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"

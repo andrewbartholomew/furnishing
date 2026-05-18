@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import Masonry from 'react-masonry-css';
 import { getItems, getQueuedItems } from './services/api';
 import ItemCard from './components/ItemCard';
 import ItemDetail from './components/ItemDetail';
@@ -290,7 +291,11 @@ function App() {
         {!loading && !error && viewMode === 'browse' && (
           <>
             {filteredItems.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <Masonry
+                breakpointCols={{ default: 4, 1024: 3, 768: 2 }}
+                className="masonry-grid"
+                columnClassName="masonry-grid-column"
+              >
                 {filteredItems.map((item) => (
                   <ItemCard
                     key={item.id}
@@ -299,7 +304,7 @@ function App() {
                     onStarToggle={handleStarToggle}
                   />
                 ))}
-              </div>
+              </Masonry>
             ) : items.length > 0 ? (
               <div className="text-center py-12">
                 <div className="text-drift text-lg">No items match the current filters</div>
