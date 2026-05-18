@@ -220,8 +220,8 @@ function FilterBar({
         <option value="title">Sort by: Title</option>
       </select>
 
-      {/* Starred only — pushed right */}
-      <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-fog bg-paper text-sm ml-auto">
+      {/* Starred only */}
+      <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-fog bg-paper text-sm">
         <input
           type="checkbox"
           checked={starredOnly}
