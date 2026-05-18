@@ -39,11 +39,16 @@ router.get('/', async (req, res) => {
     }
 
     // Validate sort column to prevent SQL injection
-    const allowedSorts = ['created_at', 'title'];
+    const allowedSorts = ['created_at', 'title', 'room'];
     const sortColumn = allowedSorts.includes(sort) ? sort : 'created_at';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
+    if (sortColumn === 'room') {
+      // Sort by room's sort_order from the rooms table (floor ordering)
+      sql += ` ORDER BY (SELECT r.sort_order FROM rooms r WHERE r.slug = items.room) ${sortOrder}`;
+    } else {
+      sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
+    }
 
     const items = await getAll(sql, params);
     res.json(items);

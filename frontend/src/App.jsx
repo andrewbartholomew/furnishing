@@ -24,7 +24,7 @@ function App() {
   const [selectedCategories, setSelectedCategories] = useState(['all']);
   const [colorFilter, setColorFilter] = useState('');
   const [starredOnly, setStarredOnly] = useState(false);
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy] = useState('room');
 
   // Update URL hash when view mode changes
   useEffect(() => {
@@ -51,7 +51,7 @@ function App() {
     try {
       setLoading(true);
       const [itemsData, queueData] = await Promise.all([
-        getItems({ sort: sortBy, order: 'DESC' }),
+        getItems({ sort: sortBy, order: sortBy === 'room' ? 'ASC' : 'DESC' }),
         getQueuedItems().catch(() => []),
       ]);
       setItems(itemsData);

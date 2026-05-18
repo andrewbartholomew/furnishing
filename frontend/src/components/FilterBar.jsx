@@ -238,6 +238,7 @@ function FilterBar({
         onChange={(e) => onSortChange(e.target.value)}
         className="px-3 py-2 text-sm border border-fog rounded-lg focus:ring-2 focus:ring-evergreen focus:border-evergreen bg-paper"
       >
+        <option value="room">Room</option>
         <option value="created_at">Date Added</option>
         <option value="title">Title</option>
       </select>
