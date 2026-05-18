@@ -209,8 +209,19 @@ function FilterBar({
       <RoomDropdown selected={selectedRooms} onToggle={onToggleRoom} />
       <CategoryDropdown selected={selectedCategories} onToggle={onToggleCategory} />
 
-      {/* Starred only */}
-      <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-fog bg-paper text-sm">
+      {/* Sort */}
+      <select
+        value={sortBy}
+        onChange={(e) => onSortChange(e.target.value)}
+        className="px-3 py-2 text-sm border border-fog rounded-lg focus:ring-2 focus:ring-evergreen focus:border-evergreen bg-paper"
+      >
+        <option value="room">Sort by: Room</option>
+        <option value="created_at">Sort by: Date Added</option>
+        <option value="title">Sort by: Title</option>
+      </select>
+
+      {/* Starred only — pushed right */}
+      <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-fog bg-paper text-sm ml-auto">
         <input
           type="checkbox"
           checked={starredOnly}
@@ -222,17 +233,6 @@ function FilterBar({
         </svg>
         <span>Only</span>
       </label>
-
-      {/* Sort */}
-      <select
-        value={sortBy}
-        onChange={(e) => onSortChange(e.target.value)}
-        className="px-3 py-2 text-sm border border-fog rounded-lg focus:ring-2 focus:ring-evergreen focus:border-evergreen bg-paper"
-      >
-        <option value="room">Room</option>
-        <option value="created_at">Date Added</option>
-        <option value="title">Title</option>
-      </select>
     </div>
   );
 }
