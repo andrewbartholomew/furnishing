@@ -106,12 +106,21 @@ function ItemCard({ item, onClick, onStarToggle }) {
           </button>
         </div>
 
-        {/* Category badge — top left */}
-        <span
-          className={`absolute top-2 left-2 text-xs font-medium px-2 py-0.5 rounded-full shadow-sm ${categoryClass}`}
-        >
-          {CATEGORY_LABELS[item.category] || item.category}
-        </span>
+        {/* Category badge — top left (only for potential/inspiration) */}
+        {(item.category === 'potential_purchase' || item.category === 'inspiration') && (
+          <span
+            className={`absolute top-2 left-2 text-xs font-medium px-2 py-0.5 rounded-full shadow-sm ${categoryClass}`}
+          >
+            {CATEGORY_LABELS[item.category] || item.category}
+          </span>
+        )}
+
+        {/* Room badge — bottom left of image */}
+        {item.room && (
+          <span className="absolute bottom-2 left-2 text-xs font-medium px-2 py-0.5 rounded-full shadow-sm bg-cloud bg-opacity-90 text-ink">
+            {formatRoomName(item.room)}
+          </span>
+        )}
 
         {/* Price badge — bottom right of image */}
         {item.price != null && item.price > 0 && (
@@ -119,13 +128,6 @@ function ItemCard({ item, onClick, onStarToggle }) {
             ${Number(item.price).toLocaleString()}
           </span>
         )}
-      </div>
-
-      {/* Info — room name only */}
-      <div className="py-2 px-3">
-        <h3 className="font-semibold text-sm text-ink line-clamp-1">
-          {formatRoomName(item.room)}
-        </h3>
       </div>
     </div>
   );

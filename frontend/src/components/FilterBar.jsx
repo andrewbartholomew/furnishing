@@ -209,15 +209,6 @@ function FilterBar({
       <RoomDropdown selected={selectedRooms} onToggle={onToggleRoom} />
       <CategoryDropdown selected={selectedCategories} onToggle={onToggleCategory} />
 
-      {/* Color text filter */}
-      <input
-        type="text"
-        placeholder="Filter by color..."
-        value={colorFilter}
-        onChange={(e) => onColorFilterChange(e.target.value)}
-        className="px-3 py-2 text-sm border border-fog rounded-lg focus:ring-2 focus:ring-evergreen focus:border-evergreen bg-paper w-36"
-      />
-
       {/* Starred only */}
       <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-fog bg-paper text-sm">
         <input
@@ -323,18 +314,6 @@ export function MobileFilterSection({
             <span className="text-sm">{cat.label}</span>
           </label>
         ))}
-      </div>
-
-      {/* Color filter */}
-      <div>
-        <label className="text-xs font-medium text-drift uppercase tracking-wide block mb-2">Color</label>
-        <input
-          type="text"
-          placeholder="Filter by color..."
-          value={colorFilter}
-          onChange={(e) => onColorFilterChange(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-fog rounded-lg focus:ring-2 focus:ring-evergreen focus:border-evergreen"
-        />
       </div>
 
       {/* Starred */}
