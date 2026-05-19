@@ -148,7 +148,6 @@ function Queue({ items, onUpdate }) {
   const [promotingId, setPromotingId] = useState(null);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this queued item?')) return;
     try {
       await deleteItem(id);
       if (onUpdate) onUpdate();
@@ -189,12 +188,6 @@ function Queue({ items, onUpdate }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-mist border border-lake rounded-lg p-3">
-        <p className="text-sm text-trail">
-          Queued items need a room and category before they appear in the browse view. Click Edit to promote them.
-        </p>
-      </div>
-
       <div className="space-y-3">
         {items.map((item) => (
           <div
