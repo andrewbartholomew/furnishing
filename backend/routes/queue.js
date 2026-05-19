@@ -13,32 +13,42 @@ router.post('/add', async (req, res) => {
 
     let imageUrl = null;
 
+    // If no explicit source_url, but image_data is a page URL, use it as source
+    let finalSourceUrl = source_url || null;
+
     if (image_data) {
       // Determine if image_data is a URL or base64
       if (image_data.startsWith('http://') || image_data.startsWith('https://')) {
-        // Fetch image from URL and upload to R2
+        // Try to fetch the URL and check if it's actually an image
         try {
           const response = await fetch(image_data);
           if (!response.ok) {
-            return res.status(400).json({ error: `Failed to fetch image: ${response.status}` });
+            // Can't fetch — just save the URL as source
+            if (!finalSourceUrl) finalSourceUrl = image_data;
+          } else {
+            const contentType = response.headers.get('content-type') || '';
+
+            if (contentType.startsWith('image/')) {
+              // It's a real image — upload to R2
+              const buffer = Buffer.from(await response.arrayBuffer());
+              const extMap = {
+                'image/jpeg': '.jpg',
+                'image/png': '.png',
+                'image/gif': '.gif',
+                'image/webp': '.webp',
+              };
+              const ext = extMap[contentType] || '.jpg';
+              const filename = `${uuidv4()}${ext}`;
+              imageUrl = await uploadToR2(buffer, filename, contentType);
+            } else {
+              // Not an image (HTML page, etc.) — save URL as source instead
+              if (!finalSourceUrl) finalSourceUrl = image_data;
+            }
           }
-
-          const contentType = response.headers.get('content-type') || 'image/jpeg';
-          const buffer = Buffer.from(await response.arrayBuffer());
-
-          const extMap = {
-            'image/jpeg': '.jpg',
-            'image/png': '.png',
-            'image/gif': '.gif',
-            'image/webp': '.webp',
-          };
-          const ext = extMap[contentType] || '.jpg';
-          const filename = `${uuidv4()}${ext}`;
-
-          imageUrl = await uploadToR2(buffer, filename, contentType);
         } catch (fetchError) {
-          console.error('Error fetching image from URL:', fetchError);
-          return res.status(400).json({ error: 'Failed to fetch image from URL' });
+          console.error('Error fetching URL:', fetchError);
+          // Don't fail — just save the URL as source
+          if (!finalSourceUrl) finalSourceUrl = image_data;
         }
       } else {
         // Treat as base64
@@ -69,7 +79,7 @@ router.post('/add', async (req, res) => {
     const result = await runQuery(
       `INSERT INTO items (title, image_url, source_url, queued)
        VALUES (?, ?, ?, 1)`,
-      [title || null, imageUrl, source_url || null]
+      [title || null, imageUrl, finalSourceUrl]
     );
 
     const newItem = await getOne('SELECT * FROM items WHERE id = ?', [result.id]);
