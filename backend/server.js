@@ -42,6 +42,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Diagnostic endpoint - check items table for issues
+import { getAll } from './db.js';
+app.get('/debug/items', async (req, res) => {
+  try {
+    const rows = await getAll(
+      `SELECT id, title, room, category, queued, length(image_url) as img_len, length(source_url) as src_len, created_at FROM items`,
+      []
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
