@@ -5,8 +5,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Create Turso database connection
-console.log('Turso URL:', process.env.TURSO_DATABASE_URL);
-console.log('Turso token starts with:', process.env.TURSO_AUTH_TOKEN?.substring(0, 20));
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL,
   authToken: process.env.TURSO_AUTH_TOKEN,
