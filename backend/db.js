@@ -84,18 +84,8 @@ async function initializeDatabase() {
       )
     `);
 
-    // Add columns if they don't exist (for existing databases)
-    const cols = await db.execute("PRAGMA table_info(items)");
-    const colNames = cols.rows.map(r => r.name);
-    if (!colNames.includes('price')) {
-      await db.execute('ALTER TABLE items ADD COLUMN price REAL');
-    }
-    if (!colNames.includes('focal_point_x')) {
-      await db.execute('ALTER TABLE items ADD COLUMN focal_point_x REAL');
-    }
-    if (!colNames.includes('focal_point_y')) {
-      await db.execute('ALTER TABLE items ADD COLUMN focal_point_y REAL');
-    }
+    // Note: price, focal_point_x, focal_point_y columns already exist in CREATE TABLE above.
+    // Removed runtime PRAGMA/ALTER TABLE migration — PRAGMA can lock tables on Turso.
 
     // Seed rooms (INSERT OR IGNORE so it only runs once)
     for (let i = 0; i < SEED_ROOMS.length; i++) {

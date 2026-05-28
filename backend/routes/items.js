@@ -54,14 +54,11 @@ router.get('/', async (req, res) => {
       sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
     }
 
-    console.log('[items] SQL:', sql);
-    console.log('[items] Params:', params);
     const items = await getAll(sql, params);
-    console.log('[items] Got', items.length, 'results');
     res.json(items);
   } catch (error) {
-    console.error('[items] Error:', error);
-    res.status(500).json({ error: 'Failed to fetch items', detail: error.message });
+    console.error('Error fetching items:', error);
+    res.status(500).json({ error: 'Failed to fetch items' });
   }
 });
 

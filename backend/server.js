@@ -42,23 +42,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Test: exact same query as items route, bypassing router
-import { getAll } from './db.js';
-app.get('/test-items', async (req, res) => {
-  try {
-    console.log('[test-items] Starting...');
-    const items = await getAll(
-      'SELECT id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at FROM items WHERE queued = 0 ORDER BY created_at DESC',
-      []
-    );
-    console.log('[test-items] Got', items.length, 'rows');
-    res.json(items);
-  } catch (err) {
-    console.error('[test-items] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 
 // 404 handler
 app.use((req, res) => {
