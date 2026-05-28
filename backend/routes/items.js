@@ -4,8 +4,10 @@ import { deleteFromR2 } from '../r2.js';
 
 const router = express.Router();
 
-// Explicit column list — avoids SELECT * which hangs on Turso
-const ITEM_COLS = 'id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at';
+// Listing columns — only what browse/queue views need (full column fetch hangs on Turso)
+const LIST_COLS = 'id, title, image_url, room, category, price, focal_point_x, focal_point_y, starred, queued, created_at';
+// Detail columns — for single-item fetches
+const DETAIL_COLS = 'id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at';
 
 // GET / - List all non-queued items with optional filters
 router.get('/', async (req, res) => {
@@ -19,7 +21,7 @@ router.get('/', async (req, res) => {
       starred,
     } = req.query;
 
-    let sql = `SELECT ${ITEM_COLS} FROM items WHERE queued = 0`;
+    let sql = `SELECT ${LIST_COLS} FROM items WHERE queued = 0`;
     const params = [];
 
     if (room) {
