@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Create Turso database connection
+console.log('Turso URL:', process.env.TURSO_DATABASE_URL);
+console.log('Turso token starts with:', process.env.TURSO_AUTH_TOKEN?.substring(0, 20));
 const db = createClient({
   url: process.env.TURSO_DATABASE_URL,
   authToken: process.env.TURSO_AUTH_TOKEN,
@@ -54,51 +56,9 @@ function slugify(name) {
 // Initialize database schema and seed rooms
 async function initializeDatabase() {
   try {
-    // Rooms table
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS rooms (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        slug TEXT NOT NULL UNIQUE,
-        sort_order INTEGER DEFAULT 0
-      )
-    `);
-
-    // Items table
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        image_url TEXT,
-        source_url TEXT,
-        room TEXT,
-        category TEXT CHECK(category IN ('potential_purchase', 'inspiration', 'owned', 'room_photo')),
-        color TEXT,
-        notes TEXT,
-        price REAL,
-        focal_point_x REAL,
-        focal_point_y REAL,
-        starred INTEGER DEFAULT 0,
-        queued INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Note: price, focal_point_x, focal_point_y columns already exist in CREATE TABLE above.
-    // Removed runtime PRAGMA/ALTER TABLE migration — PRAGMA can lock tables on Turso.
-
-    // Seed rooms (INSERT OR IGNORE so it only runs once)
-    for (let i = 0; i < SEED_ROOMS.length; i++) {
-      const name = SEED_ROOMS[i];
-      const slug = slugify(name);
-      await db.execute({
-        sql: 'INSERT OR IGNORE INTO rooms (name, slug, sort_order) VALUES (?, ?, ?)',
-        args: [name, slug, i],
-      });
-    }
-
-    console.log('Database tables initialized');
-    console.log('Rooms seeded');
+    // Tables and seed data already exist in Turso — just verify connectivity
+    const test = await db.execute('SELECT count(*) as cnt FROM rooms');
+    console.log('Database connected, rooms:', test.rows[0].cnt);
   } catch (error) {
     console.error('Error initializing database:', error);
   }
