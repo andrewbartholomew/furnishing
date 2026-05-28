@@ -4,11 +4,12 @@ import { deleteFromR2 } from '../r2.js';
 
 const router = express.Router();
 
+// Explicit column list — avoids SELECT * which hangs on Turso
+const ITEM_COLS = 'id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at';
+
 // GET / - List all non-queued items with optional filters
 router.get('/', async (req, res) => {
   try {
-    console.log('[items GET /] Starting query...');
-
     const {
       room,
       category,
@@ -18,20 +19,7 @@ router.get('/', async (req, res) => {
       starred,
     } = req.query;
 
-    // First try a minimal query to check if the table is accessible
-    try {
-      console.log('[items GET /] Testing table access...');
-      const testResult = await Promise.race([
-        getAll('SELECT count(*) as cnt FROM items', []),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Query timed out after 10s')), 10000))
-      ]);
-      console.log('[items GET /] Table accessible, count:', testResult[0]?.cnt);
-    } catch (testErr) {
-      console.error('[items GET /] Table access test failed:', testErr.message);
-      return res.status(500).json({ error: 'Database query timed out', detail: testErr.message });
-    }
-
-    let sql = 'SELECT * FROM items WHERE queued = 0';
+    let sql = `SELECT ${ITEM_COLS} FROM items WHERE queued = 0`;
     const params = [];
 
     if (room) {
@@ -59,22 +47,16 @@ router.get('/', async (req, res) => {
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     if (sortColumn === 'room') {
-      // Sort by room's sort_order from the rooms table (floor ordering)
       sql += ` ORDER BY (SELECT r.sort_order FROM rooms r WHERE r.slug = items.room) ${sortOrder}`;
     } else {
       sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
     }
 
-    console.log('[items GET /] Running main query:', sql);
-    const items = await Promise.race([
-      getAll(sql, params),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Main query timed out after 15s')), 15000))
-    ]);
-    console.log('[items GET /] Success, returning', items.length, 'items');
+    const items = await getAll(sql, params);
     res.json(items);
   } catch (error) {
     console.error('Error fetching items:', error);
-    res.status(500).json({ error: 'Failed to fetch items', detail: error.message });
+    res.status(500).json({ error: 'Failed to fetch items' });
   }
 });
 
@@ -82,7 +64,7 @@ router.get('/', async (req, res) => {
 router.get('/queue', async (req, res) => {
   try {
     const items = await getAll(
-      'SELECT * FROM items WHERE queued = 1 ORDER BY created_at DESC',
+      `SELECT ${ITEM_COLS} FROM items WHERE queued = 1 ORDER BY created_at DESC`,
       []
     );
     res.json(items);
@@ -96,7 +78,7 @@ router.get('/queue', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const item = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
 
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
@@ -133,7 +115,7 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    const newItem = await getOne('SELECT * FROM items WHERE id = ?', [result.id]);
+    const newItem = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [result.id]);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating item:', error);
@@ -146,7 +128,7 @@ router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -158,7 +140,6 @@ router.patch('/:id', async (req, res) => {
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         updates.push(`${field} = ?`);
-        // Ensure starred and queued are stored as integers
         if (field === 'starred' || field === 'queued') {
           values.push(req.body[field] ? 1 : 0);
         } else {
@@ -174,7 +155,7 @@ router.patch('/:id', async (req, res) => {
     values.push(id);
     await runQuery(`UPDATE items SET ${updates.join(', ')} WHERE id = ?`, values);
 
-    const updated = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const updated = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
     res.json(updated);
   } catch (error) {
     console.error('Error updating item:', error);
@@ -187,7 +168,7 @@ router.post('/:id/star', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -195,7 +176,7 @@ router.post('/:id/star', async (req, res) => {
     const newStarred = item.starred ? 0 : 1;
     await runQuery('UPDATE items SET starred = ? WHERE id = ?', [newStarred, id]);
 
-    const updated = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const updated = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
     res.json(updated);
   } catch (error) {
     console.error('Error toggling star:', error);
@@ -208,7 +189,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -221,7 +202,6 @@ router.delete('/:id', async (req, res) => {
         await deleteFromR2(filename);
       } catch (r2Error) {
         console.error('Error deleting image from R2:', r2Error);
-        // Continue with item deletion even if R2 delete fails
       }
     }
 

@@ -42,34 +42,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Diagnostic endpoint - check items table for issues
-import { getAll } from './db.js';
-app.get('/debug/items', async (req, res) => {
-  try {
-    // Test each column group to find which one hangs
-    const test = req.query.cols || 'basic';
-    let sql;
-    if (test === 'basic') {
-      sql = 'SELECT id, title, room, category, queued, created_at FROM items';
-    } else if (test === 'urls') {
-      sql = 'SELECT id, image_url, source_url FROM items';
-    } else if (test === 'extras') {
-      sql = 'SELECT id, color, notes, price, focal_point_x, focal_point_y, starred FROM items';
-    } else if (test === 'all') {
-      sql = 'SELECT * FROM items';
-    } else if (test === 'filtered') {
-      sql = 'SELECT id, title, room, category FROM items WHERE queued = 0';
-    }
-    console.log('[debug] Running:', sql);
-    const rows = await Promise.race([
-      getAll(sql, []),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timed out')), 10000))
-    ]);
-    res.json({ count: rows.length, rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // 404 handler
 app.use((req, res) => {

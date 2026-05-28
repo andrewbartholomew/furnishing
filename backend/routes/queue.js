@@ -82,7 +82,7 @@ router.post('/add', async (req, res) => {
       [title || null, imageUrl, finalSourceUrl]
     );
 
-    const newItem = await getOne('SELECT * FROM items WHERE id = ?', [result.id]);
+    const newItem = await getOne('SELECT id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at FROM items WHERE id = ?', [result.id]);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error adding to queue:', error);
@@ -96,7 +96,7 @@ router.post('/:id/promote', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const item = await getOne('SELECT id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at FROM items WHERE id = ?', [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -138,7 +138,7 @@ router.post('/:id/promote', async (req, res) => {
     values.push(id);
     await runQuery(`UPDATE items SET ${updates.join(', ')} WHERE id = ?`, values);
 
-    const updated = await getOne('SELECT * FROM items WHERE id = ?', [id]);
+    const updated = await getOne('SELECT id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at FROM items WHERE id = ?', [id]);
     res.json(updated);
   } catch (error) {
     console.error('Error promoting item:', error);
