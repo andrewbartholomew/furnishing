@@ -82,6 +82,9 @@ function displayImageForm(data) {
     priceInput.value = data.detectedPrice;
   }
 
+  // Default room to living room
+  roomSelect.value = 'living-room';
+
   // Switch to form mode
   selectMode.classList.add('hidden');
   formMode.classList.remove('hidden');

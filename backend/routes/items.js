@@ -7,6 +7,8 @@ const router = express.Router();
 // GET / - List all non-queued items with optional filters
 router.get('/', async (req, res) => {
   try {
+    console.log('[items GET /] Starting query...');
+
     const {
       room,
       category,
@@ -15,6 +17,19 @@ router.get('/', async (req, res) => {
       order = 'DESC',
       starred,
     } = req.query;
+
+    // First try a minimal query to check if the table is accessible
+    try {
+      console.log('[items GET /] Testing table access...');
+      const testResult = await Promise.race([
+        getAll('SELECT count(*) as cnt FROM items', []),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Query timed out after 10s')), 10000))
+      ]);
+      console.log('[items GET /] Table accessible, count:', testResult[0]?.cnt);
+    } catch (testErr) {
+      console.error('[items GET /] Table access test failed:', testErr.message);
+      return res.status(500).json({ error: 'Database query timed out', detail: testErr.message });
+    }
 
     let sql = 'SELECT * FROM items WHERE queued = 0';
     const params = [];
@@ -50,11 +65,16 @@ router.get('/', async (req, res) => {
       sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
     }
 
-    const items = await getAll(sql, params);
+    console.log('[items GET /] Running main query:', sql);
+    const items = await Promise.race([
+      getAll(sql, params),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Main query timed out after 15s')), 15000))
+    ]);
+    console.log('[items GET /] Success, returning', items.length, 'items');
     res.json(items);
   } catch (error) {
     console.error('Error fetching items:', error);
-    res.status(500).json({ error: 'Failed to fetch items' });
+    res.status(500).json({ error: 'Failed to fetch items', detail: error.message });
   }
 });
 

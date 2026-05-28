@@ -80,27 +80,74 @@
 
   // --- Try to find a price near the image ---
   function findNearbyPrice(img) {
-    const priceRegex = /\$[\d,]+(?:\.\d{2})?/;
+    // Match $1,234.56, €5,000, £299, USD 99.99, EUR 50, GBP 100, etc.
+    const priceRegex = /(?:[\$€£]|(?:USD|EUR|GBP)\s?)[\d,]+(?:\.\d{1,2})?|[\d,]+(?:\.\d{1,2})?\s?(?:USD|EUR|GBP)/i;
 
-    // Walk up to 5 parent levels looking for price text
-    let el = img.parentElement;
-    for (let i = 0; i < 5 && el; i++) {
-      const text = el.textContent || '';
+    // Match "Sold for $4,250" or "Sold for $4,250.00" patterns (auction sites)
+    const soldForRegex = /sold\s+for\s+(?:[\$€£]|(?:USD|EUR|GBP)\s?)[\d,]+(?:\.\d{1,2})?/i;
+
+    function extractPrice(text) {
       const match = text.match(priceRegex);
       if (match) {
-        return match[0].replace(/[$,]/g, '');
+        return match[0].replace(/[^0-9.]/g, '');
       }
-      el = el.parentElement;
+      return null;
     }
 
-    // Also check sibling elements
-    const parent = img.closest('article, [class*="product"], [class*="card"], [class*="item"], [class*="listing"]');
-    if (parent) {
-      const text = parent.textContent || '';
-      const match = text.match(priceRegex);
+    function extractSoldPrice(text) {
+      const match = text.match(soldForRegex);
       if (match) {
-        return match[0].replace(/[$,]/g, '');
+        return match[0].replace(/[^0-9.]/g, '');
       }
+      return null;
+    }
+
+    // --- Priority 1: Look for "Sold for $X" anywhere on the page ---
+    // On auction detail pages the image and price are often in separate sections,
+    // so check specific known containers first, then fall back to full-page scan.
+    const bidContainer = document.querySelector('[data-testid="bid-canvas-container"], [class*="bid-canvas"], [class*="sold-price"], [class*="hammer-price"]');
+    if (bidContainer) {
+      const sp = extractSoldPrice(bidContainer.textContent);
+      if (sp) return sp;
+    }
+
+    // Also walk up from the image looking for "Sold for" in ancestors
+    let walkEl = img.parentElement;
+    for (let i = 0; i < 10 && walkEl; i++) {
+      const sp = extractSoldPrice(walkEl.textContent);
+      if (sp) return sp;
+      walkEl = walkEl.parentElement;
+    }
+
+    // Broad page-level scan for "Sold for" (auction detail pages typically have one)
+    const pageSold = extractSoldPrice(document.body.textContent);
+    if (pageSold) return pageSold;
+
+    // --- Priority 2: Structured price elements in a product/card container ---
+    const container = img.closest('article, [class*="product"], [class*="card"], [class*="item"], [class*="listing"], [class*="tile"], [class*="lot"], [class*="auction"], [data-product], [data-item], [data-lot]');
+    if (container) {
+      // Look for elements with price-related classes/attributes
+      const priceEl = container.querySelector('[class*="price"], [class*="Price"], [class*="bid"], [class*="estimate"], [data-price], [itemprop="price"], .amount, .cost');
+      if (priceEl) {
+        const p = extractPrice(priceEl.textContent);
+        if (p) return p;
+      }
+      // Fall back to scanning the container text
+      const p = extractPrice(container.textContent);
+      if (p) return p;
+    }
+
+    // --- Priority 3: Walk up parents looking for any price ---
+    let el = img.parentElement;
+    for (let i = 0; i < 5 && el; i++) {
+      const priceEl = el.querySelector('[class*="price"], [class*="Price"], [class*="bid"], [class*="estimate"], [data-price], [itemprop="price"]');
+      if (priceEl) {
+        const p = extractPrice(priceEl.textContent);
+        if (p) return p;
+      }
+      const p = extractPrice(el.textContent);
+      if (p) return p;
+      el = el.parentElement;
     }
 
     return null;
