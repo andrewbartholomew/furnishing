@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
 router.get('/queue', async (req, res) => {
   try {
     const items = await getAll(
-      `SELECT ${ITEM_COLS} FROM items WHERE queued = 1 ORDER BY created_at DESC`,
+      `SELECT ${DETAIL_COLS} FROM items WHERE queued = 1 ORDER BY created_at DESC`,
       []
     );
     res.json(items);
@@ -80,7 +80,7 @@ router.get('/queue', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
+    const item = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [id]);
 
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
@@ -117,7 +117,7 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    const newItem = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [result.id]);
+    const newItem = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [result.id]);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating item:', error);
@@ -130,7 +130,7 @@ router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
+    const item = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -157,7 +157,7 @@ router.patch('/:id', async (req, res) => {
     values.push(id);
     await runQuery(`UPDATE items SET ${updates.join(', ')} WHERE id = ?`, values);
 
-    const updated = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
+    const updated = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [id]);
     res.json(updated);
   } catch (error) {
     console.error('Error updating item:', error);
@@ -170,7 +170,7 @@ router.post('/:id/star', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
+    const item = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -178,7 +178,7 @@ router.post('/:id/star', async (req, res) => {
     const newStarred = item.starred ? 0 : 1;
     await runQuery('UPDATE items SET starred = ? WHERE id = ?', [newStarred, id]);
 
-    const updated = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
+    const updated = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [id]);
     res.json(updated);
   } catch (error) {
     console.error('Error toggling star:', error);
@@ -191,7 +191,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await getOne(`SELECT ${ITEM_COLS} FROM items WHERE id = ?`, [id]);
+    const item = await getOne(`SELECT ${DETAIL_COLS} FROM items WHERE id = ?`, [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
