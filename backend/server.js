@@ -5,6 +5,7 @@ import itemsRouter from './routes/items.js';
 import roomsRouter from './routes/rooms.js';
 import uploadRouter from './routes/upload.js';
 import queueRouter from './routes/queue.js';
+import designRouter from './routes/design.js';
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +33,7 @@ app.use('/api/items', itemsRouter);
 app.use('/api/rooms', roomsRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/queue', queueRouter);
+app.use('/api/design', designRouter);
 app.use('/items', itemsRouter);
 app.use('/rooms', roomsRouter);
 app.use('/upload', uploadRouter);

@@ -4,10 +4,17 @@ import { deleteFromR2 } from '../r2.js';
 
 const router = express.Router();
 
-// Listing columns — only what browse/queue views need (full column fetch hangs on Turso)
-const LIST_COLS = 'id, title, image_url, room, category, price, focal_point_x, focal_point_y, starred, queued, created_at';
-// Detail columns — for single-item fetches
+// Split columns into two groups to work around Turso hanging on wide selects with many rows
+const LIST_COLS_A = 'id, title, image_url, room, category, price';
+const LIST_COLS_B = 'id, focal_point_x, focal_point_y, starred, queued, created_at';
+// Detail columns — for single-item fetches (few rows, so this is fine)
 const DETAIL_COLS = 'id, title, image_url, source_url, room, category, color, notes, price, focal_point_x, focal_point_y, starred, queued, created_at';
+
+// Merge two partial row arrays by id
+function mergeRows(rowsA, rowsB) {
+  const bMap = new Map(rowsB.map((r) => [r.id, r]));
+  return rowsA.map((a) => ({ ...a, ...bMap.get(a.id) }));
+}
 
 // GET / - List all non-queued items with optional filters
 router.get('/', async (req, res) => {
@@ -21,46 +28,69 @@ router.get('/', async (req, res) => {
       starred,
     } = req.query;
 
-    let sql = `SELECT ${LIST_COLS} FROM items WHERE queued = 0`;
-    const params = [];
+    let sqlA = `SELECT ${LIST_COLS_A} FROM items WHERE queued = 0`;
+    let sqlB = `SELECT ${LIST_COLS_B} FROM items WHERE queued = 0`;
+    const paramsA = [];
+    const paramsB = [];
 
     if (room) {
-      sql += ' AND room = ?';
-      params.push(room);
+      sqlA += ' AND room = ?';
+      sqlB += ' AND room = ?';
+      paramsA.push(room);
+      paramsB.push(room);
     }
 
     if (category) {
-      sql += ' AND category = ?';
-      params.push(category);
+      sqlA += ' AND category = ?';
+      sqlB += ' AND category = ?';
+      paramsA.push(category);
+      paramsB.push(category);
     }
 
     if (color) {
-      sql += ' AND color = ?';
-      params.push(color);
+      sqlA += ' AND color = ?';
+      sqlB += ' AND color = ?';
+      paramsA.push(color);
+      paramsB.push(color);
     }
 
     if (starred === '1') {
-      sql += ' AND starred = 1';
+      sqlA += ' AND starred = 1';
+      sqlB += ' AND starred = 1';
     }
 
-    // Validate sort column to prevent SQL injection
-    const allowedSorts = ['created_at', 'title', 'room'];
-    const sortColumn = allowedSorts.includes(sort) ? sort : 'created_at';
-    const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    // Run both queries in parallel, merge results, then sort in JS
+    const [rowsA, rowsB] = await Promise.all([
+      getAll(sqlA, paramsA),
+      getAll(sqlB, paramsB),
+    ]);
+
+    let items = mergeRows(rowsA, rowsB);
+
+    // Sort in JS (avoids subquery sort that can also hang on Turso)
+    const sortColumn = ['created_at', 'title', 'room'].includes(sort) ? sort : 'created_at';
+    const sortOrder = order.toUpperCase() === 'ASC' ? 1 : -1;
 
     if (sortColumn === 'room') {
-      sql += ` ORDER BY (SELECT r.sort_order FROM rooms r WHERE r.slug = items.room) ${sortOrder}`;
+      // Fetch room sort orders once
+      const rooms = await getAll('SELECT slug, sort_order FROM rooms', []);
+      const roomOrder = new Map(rooms.map((r) => [r.slug, r.sort_order]));
+      items.sort((a, b) => ((roomOrder.get(a.room) || 999) - (roomOrder.get(b.room) || 999)) * sortOrder);
     } else {
-      sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
+      items.sort((a, b) => {
+        const av = a[sortColumn] || '';
+        const bv = b[sortColumn] || '';
+        return (av > bv ? 1 : av < bv ? -1 : 0) * sortOrder;
+      });
     }
 
-    const items = await getAll(sql, params);
     res.json(items);
   } catch (error) {
     console.error('Error fetching items:', error);
     res.status(500).json({ error: 'Failed to fetch items' });
   }
 });
+
 
 // GET /queue - List all queued items
 router.get('/queue', async (req, res) => {

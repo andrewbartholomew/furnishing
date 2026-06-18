@@ -6,13 +6,14 @@ import ItemDetail from './components/ItemDetail';
 import FilterBar, { MobileFilterSection } from './components/FilterBar';
 import UploadZone from './components/UploadZone';
 import Queue from './components/Queue';
+import DesignAdvisor from './components/DesignAdvisor';
 import './App.css';
 
 // Parse hash into view + filter params: #browse?rooms=kitchen&sort=room -> { view: 'browse', params }
 function parseHash() {
   const raw = window.location.hash.slice(1); // remove #
   const [viewPart, queryPart] = raw.split('?');
-  const view = ['browse', 'upload', 'queue'].includes(viewPart) ? viewPart : 'browse';
+  const view = ['browse', 'upload', 'queue', 'design'].includes(viewPart) ? viewPart : 'browse';
   const params = new URLSearchParams(queryPart || '');
   return { view, params };
 }
@@ -250,6 +251,16 @@ function App() {
                   </span>
                 )}
               </button>
+              <button
+                onClick={() => setViewMode('design')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === 'design'
+                    ? 'bg-evergreen text-white'
+                    : 'bg-paper text-drift hover:bg-sand'
+                }`}
+              >
+                Design
+              </button>
             </div>
           </div>
 
@@ -294,6 +305,14 @@ function App() {
                       {queuedItems.length}
                     </span>
                   )}
+                </button>
+                <button
+                  onClick={() => { setViewMode('design'); setMobileMenuOpen(false); }}
+                  className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                    viewMode === 'design' ? 'bg-evergreen text-white' : 'bg-sand text-drift'
+                  }`}
+                >
+                  Design
                 </button>
               </div>
 
@@ -361,6 +380,11 @@ function App() {
         {/* Queue View */}
         {!loading && !error && viewMode === 'queue' && (
           <Queue items={queuedItems} onUpdate={loadData} />
+        )}
+
+        {/* Design View */}
+        {!loading && !error && viewMode === 'design' && (
+          <DesignAdvisor />
         )}
       </main>
 

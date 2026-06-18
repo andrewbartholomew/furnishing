@@ -74,4 +74,41 @@ export const uploadImageFromUrl = async (url) => {
   return response.data;
 };
 
+// Design Advisor
+export const analyzeRoom = async (roomSlug, photoUrls) => {
+  const response = await api.post('/design/analyze', { room_slug: roomSlug, photo_urls: photoUrls });
+  return response.data;
+};
+
+export const getRoomAnalysis = async (roomSlug) => {
+  const response = await api.get(`/design/analyses/${roomSlug}`);
+  return response.data;
+};
+
+export const updateElementStatus = async (elementId, status) => {
+  const response = await api.patch(`/design/elements/${elementId}`, { status });
+  return response.data;
+};
+
+export const createDesignProject = async (analysisId, name, userContext, anchorItems) => {
+  const response = await api.post('/design/projects', {
+    analysis_id: analysisId,
+    name,
+    user_context: userContext,
+    anchor_items: anchorItems,
+  });
+  return response.data;
+};
+
+export const getDesignProject = async (id) => {
+  const response = await api.get(`/design/projects/${id}`);
+  return response.data;
+};
+
+export const listDesignProjects = async (roomSlug) => {
+  const params = roomSlug ? { room_slug: roomSlug } : {};
+  const response = await api.get('/design/projects', { params });
+  return response.data;
+};
+
 export default api;
